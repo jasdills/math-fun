@@ -34,7 +34,7 @@ function preload() {
 function create() {
     this.add.image(400, 300, 'background');
     
-    questionText = this.add.text(100, 50, 'Solve the equation:', { fontSize: '24px', fill: '#ffffff' });
+    questionText = this.add.text(100, 50, 'Complete the equation:', { fontSize: '24px', fill: '#ffffff' });
     feedbackText = this.add.text(100, 550, '', { fontSize: '20px', fill: '#ff0000' });
     scoreText = this.add.text(600, 50, 'Score: 0', { fontSize: '24px', fill: '#ffffff' });
     
@@ -42,6 +42,10 @@ function create() {
     operatorText = this.add.text(300, 200, '', { fontSize: '40px', fill: '#ffffff' });
     num2Text = this.add.text(400, 200, '', { fontSize: '40px', fill: '#ffffff' });
     equalsText = this.add.text(500, 200, '=', { fontSize: '40px', fill: '#ffffff' });
+    
+    let dropZone1 = this.add.image(600, 200, 'box').setScale(0.5);
+    let dropZone2 = this.add.image(700, 200, 'box').setScale(0.5);
+    dropZones.push(dropZone1, dropZone2);
     
     generateQuestion();
 }
@@ -60,21 +64,19 @@ function generateQuestion() {
     operatorText.setText(operation);
     num2Text.setText(num2);
     
-    setupDraggableNumbers(correctAnswer);
+    setupDraggableNumbers(num1, num2, correctAnswer);
 }
 
-function setupDraggableNumbers(correctAnswer) {
-    // Clear previous numbers
+function setupDraggableNumbers(num1, num2, correctAnswer) {
     draggableNumbers.forEach(num => num.destroy());
     dropZones.forEach(zone => zone.destroy());
     draggableNumbers = [];
-    dropZones = [];
     
-    let possibleAnswers = [correctAnswer, correctAnswer + Phaser.Math.Between(1, 10), correctAnswer - Phaser.Math.Between(1, 10)];
-    Phaser.Utils.Array.Shuffle(possibleAnswers);
+    let possibleNumbers = [num1, num2, correctAnswer, correctAnswer + 10, correctAnswer - 10];
+    Phaser.Utils.Array.Shuffle(possibleNumbers);
     
-    possibleAnswers.forEach((value, index) => {
-        let num = this.add.text(150 + index * 200, 400, value, { fontSize: '40px', fill: '#ffffff' })
+    possibleNumbers.forEach((value, index) => {
+        let num = this.add.text(150 + index * 100, 400, value, { fontSize: '40px', fill: '#ffffff' })
             .setInteractive()
             .setData('value', value);
         
@@ -82,33 +84,33 @@ function setupDraggableNumbers(correctAnswer) {
         draggableNumbers.push(num);
     });
     
-    let dropZone = this.add.image(600, 200, 'box').setScale(0.5);
-    dropZones.push(dropZone);
-    
     this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
         gameObject.x = dragX;
         gameObject.y = dragY;
     });
     
     this.input.on('dragend', function (pointer, gameObject) {
-        if (Phaser.Geom.Intersects.RectangleToRectangle(gameObject.getBounds(), dropZone.getBounds())) {
-            checkAnswer(gameObject.getData('value'));
-        } else {
+        let placedCorrectly = false;
+        dropZones.forEach(dropZone => {
+            if (Phaser.Geom.Intersects.RectangleToRectangle(gameObject.getBounds(), dropZone.getBounds())) {
+                if (gameObject.getData('value') === correctAnswer) {
+                    placedCorrectly = true;
+                    checkAnswer();
+                }
+            }
+        });
+        if (!placedCorrectly) {
             gameObject.x = gameObject.input.dragStartX;
             gameObject.y = gameObject.input.dragStartY;
         }
     });
 }
 
-function checkAnswer(selectedValue) {
-    if (selectedValue === correctAnswer) {
-        feedbackText.setText('Correct! 🎉');
-        score += 10;
-        scoreText.setText('Score: ' + score);
-        setTimeout(generateQuestion, 1500);
-    } else {
-        feedbackText.setText('Try again! ❌');
-    }
+function checkAnswer() {
+    feedbackText.setText('Correct! 🎉');
+    score += 10;
+    scoreText.setText('Score: ' + score);
+    setTimeout(generateQuestion, 1500);
 }
 
 function update() {
