@@ -35,6 +35,14 @@ function create() {
     feedbackText = this.add.text(100, 200, '', { fontSize: '20px', fill: '#ff0000' });
     scoreText = this.add.text(600, 50, 'Score: 0', { fontSize: '24px', fill: '#ffffff' });
     
+    // Ensure Phaser parent container exists
+    let gameContainer = document.getElementById('game-container');
+    if (!gameContainer) {
+        gameContainer = document.createElement('div');
+        gameContainer.id = 'game-container';
+        document.body.appendChild(gameContainer);
+    }
+    
     // Create a DOM container
     let domContainer = document.createElement('div');
     domContainer.style.position = 'absolute';
@@ -44,6 +52,9 @@ function create() {
     domContainer.style.display = 'flex';
     domContainer.style.flexDirection = 'column';
     domContainer.style.alignItems = 'center';
+    domContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
+    domContainer.style.padding = '10px';
+    domContainer.style.borderRadius = '10px';
     
     // Create input field
     answerInput = document.createElement('input');
@@ -82,7 +93,7 @@ function generateQuestion() {
 
 function checkAnswer() {
     let userAnswer = parseInt(answerInput.value);
-    if (userAnswer === correctAnswer) {
+    if (!isNaN(userAnswer) && userAnswer === correctAnswer) {
         feedbackText.setText('Correct! 🎉');
         score += 10;
         scoreText.setText('Score: ' + score);
