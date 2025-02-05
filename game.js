@@ -35,15 +35,8 @@ function create() {
     feedbackText = this.add.text(100, 200, '', { fontSize: '20px', fill: '#ff0000' });
     scoreText = this.add.text(600, 50, 'Score: 0', { fontSize: '24px', fill: '#ffffff' });
     
-    // Ensure Phaser parent container exists
+    // Create a DOM container inside game container
     let gameContainer = document.getElementById('game-container');
-    if (!gameContainer) {
-        gameContainer = document.createElement('div');
-        gameContainer.id = 'game-container';
-        document.body.appendChild(gameContainer);
-    }
-    
-    // Create a DOM container
     let domContainer = document.createElement('div');
     domContainer.style.position = 'absolute';
     domContainer.style.top = '50%';
@@ -55,6 +48,7 @@ function create() {
     domContainer.style.backgroundColor = 'rgba(0, 0, 0, 0.5)';
     domContainer.style.padding = '10px';
     domContainer.style.borderRadius = '10px';
+    gameContainer.appendChild(domContainer);
     
     // Create input field
     answerInput = document.createElement('input');
@@ -69,8 +63,6 @@ function create() {
     submitButton.style.fontSize = '22px';
     submitButton.onclick = checkAnswer;
     domContainer.appendChild(submitButton);
-    
-    document.body.appendChild(domContainer);
     
     generateQuestion();
 }
@@ -97,11 +89,11 @@ function checkAnswer() {
         feedbackText.setText('Correct! 🎉');
         score += 10;
         scoreText.setText('Score: ' + score);
+        setTimeout(generateQuestion, 1000);
     } else {
         feedbackText.setText('Try again! ❌');
     }
-    
-    setTimeout(generateQuestion, 1000);
+    answerInput.value = '';
 }
 
 function update() {
