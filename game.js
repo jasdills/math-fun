@@ -1,17 +1,7 @@
-// Phaser.js Math Adventure Game for Grade 2 Addition & Subtraction with Interactive Workspace
-
 const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
-    parent: 'game-container',
-    physics: {
-        default: 'arcade',
-        arcade: {
-            gravity: { y: 0 },
-            debug: false
-        }
-    },
     scene: {
         preload: preload,
         create: create,
@@ -19,100 +9,59 @@ const config = {
     }
 };
 
-let game = new Phaser.Game(config);
-let questionText, feedbackText, scoreText;
-let currentQuestion, correctAnswer, score = 0;
-let num1Text, num2Text, operatorText, equalsText;
-let draggableNumbers = [];
-let dropZones = [];
+const game = new Phaser.Game(config);
+
+let questionText;
+let answerOptions = [];
+let correctAnswer;
+let feedbackText;
 
 function preload() {
-    this.load.image('background', 'assets/background.png'); // Change to your asset path
-    this.load.image('box', 'assets/box.png');
+    this.load.image('box', 'https://via.placeholder.com/100'); // Placeholder for answer boxes
 }
 
 function create() {
-    this.add.image(400, 300, 'background');
-    
-    questionText = this.add.text(100, 50, 'Complete the equation:', { fontSize: '24px', fill: '#ffffff' });
-    feedbackText = this.add.text(100, 550, '', { fontSize: '20px', fill: '#ff0000' });
-    scoreText = this.add.text(600, 50, 'Score: 0', { fontSize: '24px', fill: '#ffffff' });
-    
-    num1Text = this.add.text(200, 200, '', { fontSize: '40px', fill: '#ffffff' });
-    operatorText = this.add.text(300, 200, '', { fontSize: '40px', fill: '#ffffff' });
-    num2Text = this.add.text(400, 200, '', { fontSize: '40px', fill: '#ffffff' });
-    equalsText = this.add.text(500, 200, '=', { fontSize: '40px', fill: '#ffffff' });
-    
-    let dropZone1 = this.add.image(600, 200, 'box').setScale(0.5);
-    let dropZone2 = this.add.image(700, 200, 'box').setScale(0.5);
-    dropZones.push(dropZone1, dropZone2);
-    
-    generateQuestion();
-}
+    // Generate a multiplication question
+    let num1 = Phaser.Math.Between(2, 9);
+    let num2 = Phaser.Math.Between(2, 9);
+    correctAnswer = num1 * num2;
 
-function generateQuestion() {
-    let num1 = Phaser.Math.Between(10, 90);
-    let num2 = Phaser.Math.Between(10, 90);
-    let operation = Phaser.Math.Between(0, 1) ? '+' : '-';
-    
-    if (operation === '-' && num2 > num1) {
-        [num1, num2] = [num2, num1]; // Ensure no negative results for grade 2 level
-    }
-    
-    correctAnswer = operation === '+' ? num1 + num2 : num1 - num2;
-    num1Text.setText(num1);
-    operatorText.setText(operation);
-    num2Text.setText(num2);
-    
-    setupDraggableNumbers(num1, num2, correctAnswer);
-}
+    questionText = this.add.text(300, 100, `${num1} × ${num2} = ?`, { fontSize: '32px', fill: '#fff' });
 
-function setupDraggableNumbers(num1, num2, correctAnswer) {
-    draggableNumbers.forEach(num => num.destroy());
-    dropZones.forEach(zone => zone.destroy());
-    draggableNumbers = [];
-    
-    let possibleNumbers = [num1, num2, correctAnswer, correctAnswer + 10, correctAnswer - 10];
-    Phaser.Utils.Array.Shuffle(possibleNumbers);
-    
-    possibleNumbers.forEach((value, index) => {
-        let num = this.add.text(150 + index * 100, 400, value, { fontSize: '40px', fill: '#ffffff' })
-            .setInteractive()
-            .setData('value', value);
-        
-        this.input.setDraggable(num);
-        draggableNumbers.push(num);
-    });
-    
-    this.input.on('drag', function (pointer, gameObject, dragX, dragY) {
-        gameObject.x = dragX;
-        gameObject.y = dragY;
-    });
-    
-    this.input.on('dragend', function (pointer, gameObject) {
-        let placedCorrectly = false;
-        dropZones.forEach(dropZone => {
-            if (Phaser.Geom.Intersects.RectangleToRectangle(gameObject.getBounds(), dropZone.getBounds())) {
-                if (gameObject.getData('value') === correctAnswer) {
-                    placedCorrectly = true;
-                    checkAnswer();
-                }
-            }
-        });
-        if (!placedCorrectly) {
-            gameObject.x = gameObject.input.dragStartX;
-            gameObject.y = gameObject.input.dragStartY;
+    // Generate answer choices
+    let answers = [correctAnswer];
+    while (answers.length < 4) {
+        let wrongAnswer = Phaser.Math.Between(4, 81);
+        if (!answers.includes(wrongAnswer)) {
+            answers.push(wrongAnswer);
         }
-    });
+    }
+
+    Phaser.Utils.Array.Shuffle(answers);
+
+    for (let i = 0; i < answers.length; i++) {
+        let answerBox = this.add.image(200 + i * 150, 300, 'box').setInteractive();
+        let answerText = this.add.text(190 + i * 150, 290, answers[i], { fontSize: '24px', fill: '#000' });
+        answerBox.answerValue = answers[i];
+
+        answerBox.on('pointerdown', function () {
+            checkAnswer(this.answerValue, answerBox);
+        });
+
+        answerOptions.push({ box: answerBox, text: answerText });
+    }
+
+    feedbackText = this.add.text(300, 400, '', { fontSize: '28px', fill: '#fff' });
 }
 
-function checkAnswer() {
-    feedbackText.setText('Correct! 🎉');
-    score += 10;
-    scoreText.setText('Score: ' + score);
-    setTimeout(generateQuestion, 1500);
+function checkAnswer(selectedValue, box) {
+    if (selectedValue === correctAnswer) {
+        feedbackText.setText('Correct!');
+        box.setTint(0x00ff00);
+    } else {
+        feedbackText.setText('Try Again!');
+        box.setTint(0xff0000);
+    }
 }
 
-function update() {
-    // No need for updates unless animations are added
-}
+function update() { }
