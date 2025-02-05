@@ -4,6 +4,7 @@ const config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    parent: 'game-container',
     physics: {
         default: 'arcade',
         arcade: {
@@ -19,8 +20,9 @@ const config = {
 };
 
 let game = new Phaser.Game(config);
-let questionText, answerInput, submitButton, feedbackText, scoreText;
+let questionText, feedbackText, scoreText;
 let currentQuestion, correctAnswer, score = 0;
+let answerInput, submitButton;
 
 function preload() {
     this.load.image('background', 'assets/background.png'); // Change to your asset path
@@ -33,10 +35,31 @@ function create() {
     feedbackText = this.add.text(100, 200, '', { fontSize: '20px', fill: '#ff0000' });
     scoreText = this.add.text(600, 50, 'Score: 0', { fontSize: '24px', fill: '#ffffff' });
     
-    answerInput = this.add.dom(400, 300, 'input', 'font-size: 20px; width: 100px;');
-    submitButton = this.add.text(400, 350, 'Submit', { fontSize: '22px', fill: '#00ff00' })
-        .setInteractive()
-        .on('pointerdown', checkAnswer);
+    // Create a DOM container
+    let domContainer = document.createElement('div');
+    domContainer.style.position = 'absolute';
+    domContainer.style.top = '50%';
+    domContainer.style.left = '50%';
+    domContainer.style.transform = 'translate(-50%, -50%)';
+    domContainer.style.display = 'flex';
+    domContainer.style.flexDirection = 'column';
+    domContainer.style.alignItems = 'center';
+    
+    // Create input field
+    answerInput = document.createElement('input');
+    answerInput.type = 'number';
+    answerInput.style.fontSize = '20px';
+    answerInput.style.marginBottom = '10px';
+    domContainer.appendChild(answerInput);
+    
+    // Create submit button
+    submitButton = document.createElement('button');
+    submitButton.innerText = 'Submit';
+    submitButton.style.fontSize = '22px';
+    submitButton.onclick = checkAnswer;
+    domContainer.appendChild(submitButton);
+    
+    document.body.appendChild(domContainer);
     
     generateQuestion();
 }
@@ -54,10 +77,11 @@ function generateQuestion() {
     correctAnswer = operation === '+' ? num1 + num2 : num1 - num2;
     questionText.setText(currentQuestion);
     feedbackText.setText('');
+    answerInput.value = '';
 }
 
 function checkAnswer() {
-    let userAnswer = parseInt(answerInput.node.value);
+    let userAnswer = parseInt(answerInput.value);
     if (userAnswer === correctAnswer) {
         feedbackText.setText('Correct! 🎉');
         score += 10;
@@ -66,7 +90,6 @@ function checkAnswer() {
         feedbackText.setText('Try again! ❌');
     }
     
-    answerInput.node.value = '';
     setTimeout(generateQuestion, 1000);
 }
 
